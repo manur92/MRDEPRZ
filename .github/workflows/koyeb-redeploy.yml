@@ -27,48 +27,33 @@ jobs:
             app: "grieving-jan"
             service: "easyproxy"
             token_secret: KOYEB_TOKEN_ACC1
-
           - target: acc2
             app: "chemical-kirbie"
             service: "easyproxy"
             token_secret: KOYEB_TOKEN_ACC2
-
           - target: acc3
             app: "back-biddie"
             service: "easyproxy"
             token_secret: KOYEB_TOKEN_ACC3
-
           - target: acc4
             app: "unable-justinn"
             service: "easyproxy"
             token_secret: KOYEB_TOKEN_ACC4
 
     steps:
-      - name: Skip non-selected account
-        if: ${{ github.event.inputs.target != 'all' && github.event.inputs.target != matrix.target }}
-        run: echo "Skipping ${{ matrix.target }}"
-
       - name: Install Koyeb CLI
         if: ${{ github.event.inputs.target == 'all' || github.event.inputs.target == matrix.target }}
-        run: |
-          curl -fsSL https://raw.githubusercontent.com/koyeb/koyeb-cli/master/install.sh | sh
-          echo "$HOME/.koyeb/bin" >> $GITHUB_PATH
+        uses: koyeb-community/koyeb-actions@v2
+        with:
+          api_token: ${{ secrets[matrix.token_secret] }}
 
       - name: Redeploy service without build cache
         if: ${{ github.event.inputs.target == 'all' || github.event.inputs.target == matrix.target }}
-        env:
-          KOYEB_TOKEN_ACC1: ${{ secrets.KOYEB_TOKEN_ACC1 }}
-          KOYEB_TOKEN_ACC2: ${{ secrets.KOYEB_TOKEN_ACC2 }}
-          KOYEB_TOKEN_ACC3: ${{ secrets.KOYEB_TOKEN_ACC3 }}
-          KOYEB_TOKEN_ACC4: ${{ secrets.KOYEB_TOKEN_ACC4 }}
         run: |
-          TOKEN_VAR="${{ matrix.token_secret }}"
-          TOKEN="${!TOKEN_VAR}"
-
           echo "Redeploying ${{ matrix.app }}/${{ matrix.service }} without build cache"
 
           koyeb services redeploy "${{ matrix.service }}" \
             --app "${{ matrix.app }}" \
-            --token "$TOKEN" \
+            --skip-cache \
             --wait \
             --wait-timeout 10m
