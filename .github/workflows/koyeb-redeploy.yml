@@ -54,6 +54,5 @@ jobs:
 
           koyeb services redeploy "${{ matrix.service }}" \
             --app "${{ matrix.app }}" \
-            --skip-cache \
             --wait \
             --wait-timeout 10m
